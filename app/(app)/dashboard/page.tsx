@@ -18,7 +18,7 @@ function formatDuration(ms: number | null): string {
 
 export default function DashboardPage() {
   const summary = useSWR("dashboard/summary", () => api.dashboard.summary());
-  const audits = useSWR("dashboard/audits", () => api.audits.list(1, 8));
+  const audits = useSWR("dashboard/audits", () => api.audits.list(8));
 
   if (summary.error) {
     return (

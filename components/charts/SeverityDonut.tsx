@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
+import { CHART_HEIGHT } from "@/components/charts/ChartCard";
 import { severityStyles } from "@/lib/config";
 import type { DashboardSummary } from "@/lib/types";
 
@@ -23,7 +24,7 @@ export function SeverityDonut({
     color: severityStyles[d.severity].dot,
   }));
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
       <PieChart>
         <Pie
           data={rows}
@@ -39,6 +40,7 @@ export function SeverityDonut({
         </Pie>
         <Tooltip
           contentStyle={{ borderRadius: 8, border: "1px solid #e4e4e7", fontSize: 12 }}
+          labelStyle={{ color: "#18181b" }}
         />
         <Legend
           verticalAlign="bottom"

@@ -5,7 +5,6 @@ import useSWR from "swr";
 import { FindingCard } from "./FindingCard";
 import { SeverityBadge } from "./SeverityBadge";
 import { api } from "@/lib/api";
-import { languageLabel } from "@/lib/config";
 
 function Meta({ label, value }: { label: string; value: string }) {
   return (
@@ -57,21 +56,30 @@ export function LaudoView({ id }: { id: number }) {
         </Link>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-semibold tracking-tight">
-            Laudo #{data.id}
+            Laudo #{data.audit_id}
           </h1>
           <SeverityBadge severity={data.max_severity} />
         </div>
         <div className="flex flex-wrap gap-6 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-          <Meta label="Linguagem" value={languageLabel(data.language)} />
-          <Meta label="Modelo" value={data.model_used} />
           <Meta label="Achados" value={String(data.n_findings)} />
           <Meta
-            label="Origem"
-            value={data.source === "github_action" ? "GitHub Action" : "Web"}
+            label="Métodos"
+            value={
+              data.findings.length > 0
+                ? Array.from(
+                    new Set(
+                      data.findings.map((f) =>
+                        f.source_method === "sast"
+                          ? "SAST"
+                          : f.source_method === "llm_rag"
+                            ? "LLM + RAG"
+                            : "SAST + LLM",
+                      ),
+                    ),
+                  ).join(", ")
+                : "—"
+            }
           />
-          {data.repo_full_name && (
-            <Meta label="Repositório" value={data.repo_full_name} />
-          )}
         </div>
       </div>
 

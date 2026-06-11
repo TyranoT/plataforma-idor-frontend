@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { CHART_HEIGHT } from "@/components/charts/ChartCard";
 import type { DashboardSummary } from "@/lib/types";
 
 const AXIS = "#a1a1aa";
@@ -22,7 +23,7 @@ export function BarByVulnType({
 }) {
   const rows = data.map((d) => ({ name: d.vuln_type, n: d.n }));
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
       <BarChart
         data={rows}
         layout="vertical"
@@ -34,6 +35,7 @@ export function BarByVulnType({
         <Tooltip
           cursor={{ fill: "rgba(113,113,122,0.1)" }}
           contentStyle={{ borderRadius: 8, border: "1px solid #e4e4e7", fontSize: 12 }}
+          labelStyle={{ color: "#18181b" }}
         />
         <Bar dataKey="n" name="Ocorrências" fill={BAR} radius={[0, 4, 4, 0]} />
       </BarChart>

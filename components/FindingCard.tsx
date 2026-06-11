@@ -91,10 +91,10 @@ export function FindingCard({ finding }: { finding: Finding }) {
             Fontes
           </h4>
           <ul className="flex flex-col gap-2">
-            {sources.map((s) => (
+            {sources.map((s, i) => (
               <li
-                key={s.chunk_id}
-                className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm dark:border-zinc-800 dark:bg-zinc-950/40"
+                key={`${s.title}-${i}`}
+                className="flex items-baseline gap-2 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm dark:border-zinc-800 dark:bg-zinc-950/40"
               >
                 {s.source_url ? (
                   <a
@@ -108,9 +108,9 @@ export function FindingCard({ finding }: { finding: Finding }) {
                 ) : (
                   <span className="font-medium">{s.title}</span>
                 )}
-                <p className="mt-1 text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">
-                  “{s.excerpt}”
-                </p>
+                <span className="ml-auto shrink-0 text-xs uppercase tracking-wide text-zinc-500">
+                  {s.doc_type}
+                </span>
               </li>
             ))}
           </ul>

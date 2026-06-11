@@ -65,6 +65,8 @@ export function monacoLanguage(language: Language): string {
   return LANGUAGES.find((l) => l.value === language)?.monaco ?? "plaintext";
 }
 
-export function languageLabel(language: Language): string {
+// Aceita string: a lista de auditorias pode trazer linguagens vindas da
+// GitHub Action fora do select da tela web.
+export function languageLabel(language: string): string {
   return LANGUAGES.find((l) => l.value === language)?.label ?? language;
 }

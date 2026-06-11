@@ -1,17 +1,19 @@
 import { API_URL, USE_MOCKS } from "./config";
 import { clearToken, getToken } from "./auth";
 import type {
-  AuditListItem,
+  AuditList,
   AuditResult,
   CreateAuditRequest,
+  CredentialsRequest,
   DashboardSummary,
-  Paginated,
+  TokenResponse,
 } from "./types";
 import {
   mockCreateAudit,
   mockDashboardSummary,
   mockGetAudit,
   mockListAudits,
+  mockLogin,
 } from "./mock";
 
 export class ApiError extends Error {
@@ -23,15 +25,24 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const token = getToken();
-  const headers = new Headers(init.headers);
+interface RequestOptions extends RequestInit {
+  // Rotas públicas (/auth/*): 401 significa "credenciais inválidas",
+  // não "sessão expirada" — não derruba a sessão nem redireciona.
+  public?: boolean;
+}
+
+async function request<T>(path: string, init: RequestOptions = {}): Promise<T> {
+  const { public: isPublic, ...rest } = init;
+  const headers = new Headers(rest.headers);
   headers.set("Content-Type", "application/json");
-  if (token) headers.set("Authorization", `Bearer ${token}`);
+  if (!isPublic) {
+    const token = getToken();
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+  }
 
-  const res = await fetch(`${API_URL}${path}`, { ...init, headers });
+  const res = await fetch(`${API_URL}${path}`, { ...rest, headers });
 
-  if (res.status === 401) {
+  if (res.status === 401 && !isPublic) {
     clearToken();
     if (typeof window !== "undefined" && location.pathname !== "/login") {
       const next = encodeURIComponent(location.pathname + location.search);
@@ -44,7 +55,8 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     let detail = `Erro ${res.status}`;
     try {
       const body = (await res.json()) as { detail?: string; message?: string };
-      detail = body.detail ?? body.message ?? detail;
+      if (typeof body.detail === "string") detail = body.detail;
+      else if (typeof body.message === "string") detail = body.message;
     } catch {
       /* corpo não-JSON */
     }
@@ -56,10 +68,30 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
+  auth: {
+    // POST /auth/login — valida email+senha e devolve um JWT.
+    login(credentials: CredentialsRequest): Promise<TokenResponse> {
+      if (USE_MOCKS) return mockLogin();
+      return request<TokenResponse>("/auth/login", {
+        method: "POST",
+        body: JSON.stringify(credentials),
+        public: true,
+      });
+    },
+    // POST /auth/register — cria usuário (email único) e devolve um JWT.
+    register(credentials: CredentialsRequest): Promise<TokenResponse> {
+      if (USE_MOCKS) return mockLogin();
+      return request<TokenResponse>("/auth/register", {
+        method: "POST",
+        body: JSON.stringify(credentials),
+        public: true,
+      });
+    },
+  },
   audits: {
     // POST /audits — cria e roda uma auditoria, devolve o laudo.
     create(req: CreateAuditRequest): Promise<AuditResult> {
-      if (USE_MOCKS) return mockCreateAudit(req);
+      if (USE_MOCKS) return mockCreateAudit();
       return request<AuditResult>("/audits", {
         method: "POST",
         body: JSON.stringify(req),
@@ -70,12 +102,10 @@ export const api = {
       if (USE_MOCKS) return mockGetAudit(Number(id));
       return request<AuditResult>(`/audits/${id}`);
     },
-    // GET /audits — lista paginada para o dashboard.
-    list(page = 1, pageSize = 20): Promise<Paginated<AuditListItem>> {
-      if (USE_MOCKS) return mockListAudits(page, pageSize);
-      return request<Paginated<AuditListItem>>(
-        `/audits?page=${page}&page_size=${pageSize}`,
-      );
+    // GET /audits?limit=&offset= — lista paginada (mais recentes primeiro).
+    list(limit = 20, offset = 0): Promise<AuditList> {
+      if (USE_MOCKS) return mockListAudits(limit, offset);
+      return request<AuditList>(`/audits?limit=${limit}&offset=${offset}`);
     },
   },
   dashboard: {

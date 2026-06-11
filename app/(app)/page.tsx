@@ -32,7 +32,7 @@ export default function AnalisePage() {
         code,
         source: "web_paste",
       });
-      router.push(`/audit/${result.id}`);
+      router.push(`/audit/${result.audit_id}`);
     } catch (err) {
       const message =
         err instanceof ApiError
